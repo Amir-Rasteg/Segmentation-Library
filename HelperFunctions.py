@@ -136,4 +136,26 @@ def PointListToString(points : list) -> str:
     return output;
 #end
 
+def NumpyArray2String(array : np.ndarray) -> str:
 
+    string = "np.asarray(["
+    for element in array:
+        string = string + str(element) + ","
+    string = string[:-1] + "])"
+    return string
+
+def dict2String(dictionary: dict) -> str:
+
+    string = "{"
+    for key in dictionary.keys():
+        substring: str = "'" + str(key) + "': "
+        if isinstance(dictionary[key], str):
+            substring = substring + "'" + dictionary[key] + "', "
+        else:
+            # assume numpy array
+            substring = substring + NumpyArray2String(dictionary[key])
+
+        string = string + substring + ","
+
+    string = string[:-1] + "}"
+    return string

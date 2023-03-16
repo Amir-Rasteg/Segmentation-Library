@@ -106,7 +106,7 @@ class MeshContainer:
 
         Parameters
         ----------
-        PickedPointSetName : string
+        pickedPointSetName : string
             name of the PickedPointSet to be stored into the MeshContainer.
         pointIndexes : np.ndarray
             1D int array of point indexes
@@ -258,6 +258,244 @@ class MeshContainer:
 
         o3d.visualization.draw_geometries(modelsToShow)
     # end
+
+    def Wizard(mc) -> 'MeshContainer':
+        def QueryUser() -> str:
+            '''Retrieves next step from user'''
+            print("Please type in the next action you wish to complete. Case matters!")
+            print("Type 'Help' to see the list of available options.\n")
+            return input()
+
+        def GetMC(meshContainerHistory: list, currentStep: int) -> MeshContainer:
+            return meshContainerHistory[currentStep]
+
+        def DecisionTree(choice : str, currentStep: int,meshContainerHistory: list,commandHistory: list) -> list[bool, int, list, list]:
+
+            def GetColorChannel() -> str:
+                print("Please type in a color channel to use. Cases matter!")
+                print("Options: red green blue hue saturation value\n")
+                options: list = ["red", "green", "blue", "hue", "saturation", "value"]
+                while (True):
+                    inputValue = input()
+                    if (inputValue in options):
+                        return inputValue
+                    # end
+                    print("Invalid option selected. Try again: \n")
+                # end
+
+            def Previous(currentStep: int, commandHistory: list):
+                if(currentStep == 0):
+                    print("You did not run any commands")
+                    return
+                print(f'The last command you ran was {commandHistory[currentStep - 1]["Command"]}')
+
+            def UndoPrevStep(currentStep: int, commandHistory: list, meshContainerHistory: list) -> list[
+                int, list, list]:
+
+                commandHistory = commandHistory[:-1]
+                meshContainerHistory = meshContainerHistory[:-1]
+                currentStep = currentStep - 1
+                return [currentStep, commandHistory, meshContainerHistory]
+
+            def PrintHelp():
+                '''Prints Help Statement for User'''
+                print(
+                    "VisualizeMesh : Shows the current mesh in a window. Execution will not continue until it's closed.")
+                print(
+                    "FindDepth : Allows you to pick a plane and then a point to measure the depth/height of structures.")
+                print("GetDistanceBetweenPoints : allows you to find the distance between 2 points you pick.")
+                print("CropByBoundingBox : Allows you to do a manual hard-crop within 4 picked points.")
+                print("RemoveCompletelyBlackPoints : Removed Points that were likely erroneously colored.")
+                print(
+                    "DivideByOtsuColorSinglePickedPoint : Pick color channel to Otsu's segment with, then pick a side.")
+                print("DivideGiven2PPS : Pick an inside and outside region and the system will attempt to segment it.")
+                print("Previous : What was the last command you ran?")
+                print("Undo : Undos your previous command")
+                print("Stop : stops the wizard, outputs the current mesh and steps taken to get there.\n")
+
+            def VM(currentStep: int, meshContainerHistory: list):
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+                hmc.VisualizeMesh()
+
+            def FD(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+                numDist: float = hmc.FindDepth()
+                print(f"Measured Depth was: {numDist}")
+
+                PlanePoints: np.ndarray = hmc.PickedPointsSets["PlanePoints"].indexes
+                DepthPoint: np.ndarray = hmc.PickedPointsSets["DepthPoint"].indexes
+
+                dOut: dict = {
+                    "Command": "FindDepth",
+                    "PlanePoints": PlanePoints,
+                    "DepthPoint": DepthPoint
+                }
+
+                return [dOut, hmc]
+
+            def GDBP(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+                numDist: float = hmc.GetDistanceBetweenPoints()
+                print(f"Measured Distance was: {numDist}")
+
+                perimeterPoints: np.ndarray = hmc.PickedPointsSets["defaultPerimeterSet"].indexes
+
+                dOut: dict = {
+                    "Command": "GetDistanceBetweenPoints",
+                    "perimeterPoints": (perimeterPoints)
+                }
+
+                return [dOut, hmc]
+
+            def CBBB(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                newMC: MeshContainer
+                newMC = hmc.CropByBoundingBox()
+
+                PP: np.ndarray = hmc.PickedPointsSets["Points To Crop"].indexes
+
+                dOut: dict = {
+                    "Command": "CropByBoundingBox",
+                    "Points To Crop": (PP)
+                }
+
+                return [dOut, newMC]
+
+            def RCBP(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                newMC: MeshContainer
+
+                newMC , _ = hmc.RemoveCompletelyBlackPoints()
+
+                dOut: dict = {"Command": "RemoveCompletelyBlackPoints"}
+                return [dOut, newMC]
+
+            def DBOCSPP(currentStep: int, meshContainerHistory: list, colorChannel: str) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                newMC: MeshContainer
+                newMC, _ = hmc.DivideByOtsuColorSinglePickedPoint(colorChannel)
+
+                PP: np.ndarray = hmc.PickedPointsSets["_SinglePoint"].indexes
+
+                dOut: dict = {
+                    "Command": "DivideByOtsuColorSinglePickedPoint",
+                    "colorChannel": colorChannel,
+                    "_SinglePoint": (PP)
+                }
+
+                return [dOut, newMC]
+
+            def DG2PPS(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                newMC: MeshContainer
+                newMC, _ = hmc.DivideGiven2PPS(numberAdjacentSearches=2)
+
+                PPin: np.ndarray = hmc.PickedPointsSets["_InsidePoints"].indexes
+                PPout: np.ndarray = hmc.PickedPointsSets["_OutsidePoints"].indexes
+
+                dOut: dict = {
+                    "Command": "DivideGiven2PPS",
+                    "_InsidePoints": (PPin),
+                    "_OutsidePoints": (PPout)
+                }
+
+                return [dOut, newMC]
+
+            # This mess is why C# is better
+            if choice == "Help":
+                PrintHelp()
+                return [False, currentStep, meshContainerHistory, commandHistory]
+            if choice == "VisualizeMesh":
+                VM(currentStep, meshContainerHistory)
+                return [False, currentStep, meshContainerHistory, commandHistory]
+            if choice == "Previous":
+                Previous(currentStep, commandHistory)
+                return [False, currentStep, meshContainerHistory, commandHistory]
+            if choice == "Undo":
+                if (currentStep == 0):
+                    print("There are no previous steps to undo!")
+                    return [False, currentStep, commandHistory, meshContainerHistory]
+                currentStep, commandHistory, meshContainerHistory = UndoPrevStep(currentStep, commandHistory, meshContainerHistory)
+                return [False, currentStep, meshContainerHistory, commandHistory]
+            if choice == "Stop":
+                return [True, currentStep, meshContainerHistory, commandHistory]
+
+            # Mesh Modifiers
+
+            newMesh: MeshContainer
+            dOut: dict
+            unknown: bool = True
+
+            if choice == "FindDepth":
+                dOut, newMesh = FD(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "GetDistanceBetweenPoints":
+                dOut, newMesh = GDBP(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "CropByBoundingBox":
+                dOut, newMesh = CBBB(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "RemoveCompletelyBlackPoints":
+                dOut, newMesh = RCBP(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "DivideByOtsuColorSinglePickedPoint":
+                choice: str = GetColorChannel()
+                dOut, newMesh = DBOCSPP(currentStep, meshContainerHistory, choice)
+                unknown = False
+            if choice == "DivideGiven2PPS":
+                dOut, newMesh = DG2PPS(currentStep, meshContainerHistory)
+                unknown = False
+
+            if unknown:
+                print("Invalid option, try again")
+                return [False, currentStep, meshContainerHistory, commandHistory]
+
+
+            meshContainerHistory.append(newMesh)
+            commandHistory.append(dOut)
+            currentStep = currentStep + 1
+
+            return [False, currentStep, meshContainerHistory, commandHistory]
+
+        def OutputHistory(commandHistory: list):
+
+            if len(commandHistory) == 0:
+                return "No Steps taken"
+
+            output: str = "dictionary: dict = ["
+            for dictCommand in commandHistory:
+                output = output + F.dict2String(dictCommand) + ","
+            # end
+            output = output[:-1] + "]"
+            return output
+
+
+        # CODE STARTS HERE
+
+        print("Welcome to the Segmentation Helper Wizard!")
+
+        currentStep : int = 0
+        meshContainerHistory: list = [copy.copy(mc)]
+        commandHistory: list = [] # Elements are dicts with key for the command, and other keys for other relevant info
+        isLookFinished: bool = False
+
+        # Ask the user what to do, build up command history
+
+        while not isLookFinished:
+            userResponse: str = QueryUser()
+            isLookFinished, currentStep, meshContainerHistory, commandHistory = DecisionTree(userResponse, currentStep, meshContainerHistory, commandHistory)
+        # end
+
+        print("Process Complete! Printing out the steps into the console. Copy and paste it to get a sequence of commands to reuse.\n\n")
+        print(OutputHistory(commandHistory))
+        return GetMC(meshContainerHistory, currentStep)
+    # end
+
+
 
     def __ResetStored(mc):
         """
@@ -595,7 +833,6 @@ class MeshContainer:
         
         return output;
     #end
-        
     
     
     @property
