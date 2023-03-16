@@ -260,6 +260,7 @@ class MeshContainer:
     # end
 
     def Wizard(mc) -> 'MeshContainer':
+        '''Easy to Use Menu for running commands and generating automations'''
         def QueryUser() -> str:
             '''Retrieves next step from user'''
             print("Please type in the next action you wish to complete. Case matters!")
@@ -495,6 +496,47 @@ class MeshContainer:
         return GetMC(meshContainerHistory, currentStep)
     # end
 
+    def WizardLoad(mc, commands: list) -> 'MeshContainer':
+
+        def DecisionTree(inputDict: dict, inputMC: MeshContainer) -> MeshContainer:
+
+            command: str = inputDict["Command"]
+
+            if command == "FindDepth":
+                inputMC.SetPickedPoints("PlanePoints", inputDict["PlanePoints"])
+                inputMC.SetPickedPoints("DepthPoint", inputDict["DepthPoint"])
+                inputMC.FindDepth(planePointsName="PlanePoints", depthPointName="DepthPoint")
+                return inputMC
+            if command == "GetDistanceBetweenPoints":
+                inputMC.SetPickedPoints("perimeterPoints", inputDict["perimeterPoints"])
+                inputMC.GetDistanceBetweenPoints(pickedPointSetPerimeterName="perimeterPoints")
+                return inputMC
+            if command == "CropByBoundingBox":
+                inputMC.SetPickedPoints("Points To Crop", inputDict["Points To Crop"])
+                inputMC = inputMC.CropByBoundingBox(boundingBoxInitialPPSName="Points To Crop")
+                return inputMC
+            if command == "RemoveCompletelyBlackPoints":
+                inputMC, _ = inputMC.RemoveCompletelyBlackPoints()
+                return inputMC
+            if command == "DivideByOtsuColorSinglePickedPoint":
+                inputMC.SetPickedPoints("_SinglePoint", inputDict["_SinglePoint"])
+                inputMC, _ = inputMC.DivideByOtsuColorSinglePickedPoint(inputDict["colorChannel"], singlePickedPointSetName= "_SinglePoint")
+                return inputMC
+
+
+            # DivideGiven2PPS
+            inputMC.SetPickedPoints("_InsidePoints", inputDict["_InsidePoints"])
+            inputMC.SetPickedPoints("_OutsidePoints", inputDict["_OutsidePoints"])
+            inputMC, _ = inputMC.DivideGiven2PPS(PPSInsideName="_InsidePoints", PPSOutsideName="_OutsidePoints", numberAdjacentSearches=2)
+            return inputMC
+        # end
+
+        output: MeshContainer = copy.copy(mc)
+        for element in commands:
+            output = DecisionTree(element, output)
+
+        return output
+    # end
 
 
     def __ResetStored(mc):
