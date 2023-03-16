@@ -1095,7 +1095,22 @@ class MeshContainer:
         
         return mc.__ContainerFromMesh(newMesh);
     # end
-    
+
+    def RemoveIslands(mc, minimumArea: float = 50) ->'MeshContainer':
+        multiOutput: tuple = mc.mesh.cluster_connected_triangles()
+        triangleIndeces: np.ndarray = np.asarray(multiOutput[0])
+        triangleAreas: np.ndarray = np.asarray(multiOutput[2])
+
+        indexTriangleTooSmall: np.ndarray = np.argwhere(triangleAreas < minimumArea)
+        triangleMask: np.ndarray = np.isin(triangleIndeces, indexTriangleTooSmall) # true if too small
+        newMesh: o3d.geometry.TriangleMesh = copy.copy(mc.mesh)
+        newMesh.remove_triangles_by_mask(triangleMask)
+        newMesh = newMesh.remove_unreferenced_vertices()
+        newMesh = newMesh.remove_degenerate_triangles()
+        return MeshContainer(newMesh)
+
+
+
     def RemoveCompletelyBlackPoints(mc,maxBrightness : float = 0.01) -> list['MeshContainer', 'MeshContainer']:
         """
         Used To output a mesh with completely black points removed. 
