@@ -876,7 +876,11 @@ class MeshContainer:
         return output;
     #end
     
-    
+    def Save(mc, folderPath: str, fileName: str):
+        """allows for saving of meshContainers as ply files"""
+        o3d.io.write_triangle_mesh((folderPath + fileName + ".ply", mc.mesh))
+    # end
+
     @property
     def linearCalibration(mc) -> float:
         """
