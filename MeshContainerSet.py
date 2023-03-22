@@ -50,6 +50,31 @@ class MeshContainerSet:
         
         return MeshContainerSet(newMeshContainers, trueSurfaceArea = mcs.__trueSurfaceAreaHidden, meshName = mcs.meshName);
     #end
+
+    def MassRemoveIslands(mcs, minSize: float = 50) -> 'MeshContainerSet':
+        """
+        Returns a MeshContainerSet based on this object but islands removed
+
+        Parameters
+        ----------
+        minSize : float, optional
+            mix size for every island before its deleted. The default is 50.
+        Returns
+        -------
+        MeshContainerSet
+            This objects MeshContainers but with black regions removed.
+
+        """
+
+        newMeshContainers: list = [];
+        for MeCo in mcs.__MeshContainerList:
+            cleanedMeshContainer = MeCo.RemoveIslands(minimumArea=minSize);
+            newMeshContainers.append(cleanedMeshContainer);
+        # end
+
+        return MeshContainerSet(newMeshContainers, trueSurfaceArea=mcs.__trueSurfaceAreaHidden, meshName=mcs.meshName);
+
+    # end
     
     
     def MassManualDefineBoxCrop(mcs, cubeHalfOffsetHeight : float = 0.1, repressPrint : bool = False) -> 'MeshContainerSet':
