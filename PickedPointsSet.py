@@ -5,8 +5,12 @@ import HelperFunctions as F
 
 
 class PickedPointSet:
-    '''creates picked point set objects'''
-    
+    """
+    Container to hold a set of user (or given) 'picked' points. These points typically picked from the UI typically
+    only contain the vertex index. This class extends that to easily retrieve color and statistical information from
+    those points
+    """
+
     def __init__(pp, pickedPointIndexes : np.ndarray, mesh : o3d.geometry.TriangleMesh, self):
         
         pp.indexes : np.ndarray = pickedPointIndexes
