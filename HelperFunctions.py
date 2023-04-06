@@ -1,6 +1,7 @@
-#Functions for use in scripts
-import open3d as o3d;
-import numpy as np;
+# Functions for use in scripts
+import open3d as o3d
+import numpy as np
+
 
 def ColorStringToInt(name: str) -> int:
     """
@@ -18,16 +19,14 @@ def ColorStringToInt(name: str) -> int:
 
     """
     try:
-        PossibleStrings = ['red', 'green', 'blue', 'hue', 'saturation', 'value'];
-        index = PossibleStrings.index(name.lower());
+        possibleStrings = ['red', 'green', 'blue', 'hue', 'saturation', 'value']
+        index = possibleStrings.index(name.lower())
         return index
     except ValueError as error:
-        print("Input string '", name, "' is not a color");
-        print(error);
-        exit();
-    #end    
+        raise Exception(f"input string {name} is not an accepted color")
 
-def IntToColorString(index : int) -> str:
+
+def IntToColorString(index: int) -> str:
     """
     Given the integer index of all possible color channels, returns the color channel name as a string
 
@@ -43,11 +42,11 @@ def IntToColorString(index : int) -> str:
 
     """
     if index < 0:
-        raise Exception("Cannot have a negative index");
-    #end
-    PossibleStrings = ['red', 'green', 'blue', 'hue', 'saturation', 'value'];
-    return PossibleStrings[index];
-#return
+        raise Exception("Cannot have a negative index")
+    if index > 0:
+        raise Exception("Color index cannot be greater than 5")
+    possibleStrings = ['red', 'green', 'blue', 'hue', 'saturation', 'value']
+    return possibleStrings[index]
 
 
 def StatsGet123_Quartiles(arrayIn: np.ndarray) -> np.ndarray:
@@ -62,14 +61,14 @@ def StatsGet123_Quartiles(arrayIn: np.ndarray) -> np.ndarray:
     -------
     TYPE : np.ndarray (1D length of 3)
     """
-    output = np.zeros(3);
-    output[0] = np.quantile(arrayIn, 0.25);
-    output[1] = np.quantile(arrayIn, 0.50);
-    output[2] = np.quantile(arrayIn, 0.75);
-    return np.asarray(output);
-#end
+    output = np.zeros(3)
+    output[0] = np.quantile(arrayIn, 0.25)
+    output[1] = np.quantile(arrayIn, 0.50)
+    output[2] = np.quantile(arrayIn, 0.75)
+    return np.asarray(output)
 
-def GeneratePointCloudFromCoords(coords: np.ndarray, colorRGB = np.asarray([0,255,0])) -> o3d.geometry.PointCloud:
+
+def GeneratePointCloudFromCoords(coords: np.ndarray, colorRGB=np.asarray([0, 255, 0])) -> o3d.geometry.PointCloud:
     """
     Generates a New PointCloud given a set of XYZ coordinates and optionaly colors. No triangles
 
@@ -87,15 +86,15 @@ def GeneratePointCloudFromCoords(coords: np.ndarray, colorRGB = np.asarray([0,25
 
     """
 
-    colorRGB = colorRGB / 255;
-    newMesh = o3d.geometry.PointCloud();
-    newMesh.points = o3d.utility.Vector3dVector(coords);
-    newMesh.paint_uniform_color(colorRGB);
-    return newMesh;
-#end
+    colorRGB = colorRGB / 255
+    newMesh = o3d.geometry.PointCloud()
+    newMesh.points = o3d.utility.Vector3dVector(coords)
+    newMesh.paint_uniform_color(colorRGB)
+    return newMesh
+
 
 def GetEdgeVertsFromTriangleMesh(mesh: o3d.geometry.TriangleMesh) -> np.ndarray:
-    '''
+    """
     Returns array of Edge Vert Indices from Mesh
 
     Parameters
@@ -108,41 +107,38 @@ def GetEdgeVertsFromTriangleMesh(mesh: o3d.geometry.TriangleMesh) -> np.ndarray:
     np.ndarray
         1D int array of point indexes.
 
-    '''
-    return np.unique((np.asarray(mesh.get_non_manifold_edges(allow_boundary_edges = False))).flatten()); #cursed
-#end  
+    """
+    return np.unique((np.asarray(mesh.get_non_manifold_edges(allow_boundary_edges=False))).flatten())  # cursed
 
 
-def PointListToString(points : list) -> str:
-    '''turns a list of numpy arrays into a string'''
+def PointListToString(points: list) -> str:
+    """turns a list of numpy arrays into a string"""
     
-    def NPArrToString(arr : np.ndarray) -> str:
-        ''' turns a numpy array into a string that you can input to code'''
-        outString : str = "np.asarray([";
+    def NPArrToString(arr: np.ndarray) -> str:
+        """turns a numpy array into a string that you can input to code"""
+        outString: str = "np.asarray(["
         for number in arr:
-            outString = outString + str(number) + ",";
-        #end
-        outString = outString.rstrip(outString[-1]);
-        outString = outString + "])";
-        return outString;
-    #end
+            outString = outString + str(number) + ","
+        outString = outString.rstrip(outString[-1])
+        outString = outString + "])"
+        return outString
         
-    output : str = "[";
+    output: str = "["
     for element in points:
-        output = output + NPArrToString(element) + ",";
-    #end
-    output = output.rstrip(output[-1]);
+        output = output + NPArrToString(element) + ","
+    output = output.rstrip(output[-1])
     output = output + "]"
-    return output;
-#end
+    return output
 
-def NumpyArray2String(array : np.ndarray) -> str:
+
+def NumpyArray2String(array: np.ndarray) -> str:
 
     string = "np.asarray(["
     for element in array:
         string = string + str(element) + ","
     string = string[:-1] + "])"
     return string
+
 
 def dict2String(dictionary: dict) -> str:
 
