@@ -3,10 +3,7 @@ Introduction
 These set of scripts act as a wrapper around Open3D to add segmentation functions based on global color thresholding, and focused on medical usecases.
 
 This system was built by Amir Rastegar as part of their Master's thesis at Duquesne University, under the supervision of Dr. Bin Yang
-
-
-Installation:
-
+Installation
 Step 1: Create a new Python Virtual Environment
 
 (Skipping this step can cause a lot of pain now and/or later)
