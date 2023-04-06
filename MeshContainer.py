@@ -1011,7 +1011,6 @@ class MeshContainer:
         """
 
 
-        # TODO Flawed
         def FindBoundingBoxFrom4Points(arrPoints : np.ndarray, halfCubeHeight : float) -> Tuple[o3d.geometry.AxisAlignedBoundingBox, np.ndarray]:
 
             def SelectIndexesBesidesSelf(indSearching : int, numIndexes : int) -> np.ndarray:
@@ -1266,12 +1265,12 @@ class MeshContainer:
         
         forceNew : bool = (singlePickedPointSetName == "_SinglePoint")
         singlePointSet : PickedPointSet = mc.GetPickedPoints(singlePickedPointSetName, 1, ShouldForceNew = forceNew);
-        
+
         if(isinstance(colorChannel, str)):
             colorChannel = F.ColorStringToInt(colorChannel);
         #end
         
-        valToPick : float = singlePointSet.RGBHSV_Quartiles[colorChannel][1]; #get average
+        valToPick : float = singlePointSet.RGBHSV_Quartiles[colorChannel, 1]; #get average
         return mc.DivideByOtsuColor(colorChannel, valToPick);
         
 

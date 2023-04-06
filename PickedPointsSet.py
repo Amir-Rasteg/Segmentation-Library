@@ -1,7 +1,7 @@
-import open3d as o3d;
-import numpy as np;
-from skimage.color import rgb2hsv;
-import HelperFunctions as F;
+import open3d as o3d
+import numpy as np
+from skimage.color import rgb2hsv
+import HelperFunctions as F
 
 
 class PickedPointSet:
@@ -9,16 +9,17 @@ class PickedPointSet:
     
     def __init__(pp, pickedPointIndexes : np.ndarray, mesh : o3d.geometry.TriangleMesh, self):
         
-        pp.indexes : np.ndarray = pickedPointIndexes;
-        pp.coordinates : np.ndarray = np.asarray(mesh.vertices)[pickedPointIndexes];
+        pp.indexes : np.ndarray = pickedPointIndexes
+        pp.coordinates : np.ndarray = np.asarray(mesh.vertices)[pickedPointIndexes]
         pp.RGB : np.ndarray = np.asarray(mesh.vertex_colors)[pickedPointIndexes]
-        pp.pointCount : int = len(pickedPointIndexes);
+        pp.pointCount : int = len(pickedPointIndexes)
         
-        pp.__HSV_STORED : np.ndarray = None;
-        pp.__coordinatesQuartiles_STORED : np.ndarray = None;
-        pp.__RGBQuartiles_STORED : np.ndarray = None;
-        pp.__HSVQuartiles_STORED : np.ndarray = None;
-        pp.self = self;
+        pp.__HSV_STORED : np.ndarray
+        pp.__RGBHSV_STORED: np.ndarray
+        pp.__coordinatesQuartiles_STORED : np.ndarray
+        pp.__RGBQuartiles_STORED : np.ndarray
+        pp.__HSVQuartiles_STORED : np.ndarray
+        pp.self = self
     #end
     
     def __GetHSV(pp) -> np.ndarray:
@@ -31,70 +32,90 @@ class PickedPointSet:
 
         """
         if(pp.__HSV_STORED is None):
-            pp.__HSV_STORED = np.asarray(rgb2hsv(pp.RGB));
+            pp.__HSV_STORED = np.asarray(rgb2hsv(pp.RGB))
         #end
-        return pp.__HSV_STORED;
+        return pp.__HSV_STORED
     #end
     
-    def __GetRGBQuartiles(pp) -> list[np.ndarray]:
+    def __GetRGBQuartiles(pp) -> np.ndarray:
         """
         returns quartile 1, 2, 3 for each color channel
 
         Returns
         -------
-        list of quartile arrays (one per RGB channel)
+        2D array
+        R_Q1, R_Q2, R_Q3
+        G_Q1...
 
         """
         if(pp.__RGBQuartiles_STORED is None):
-            output = [[],[],[]];
-            for i in range(3):
-                output[i] = F.StatsGet123_Quartiles(pp.RGB[:,i]);
-            #end
-            pp.__RGBQuartiles_STORED = output;
+            R: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 0])
+            G: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 1])
+            B: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 2])
+            pp.__RGBQuartiles_STORED = np.hstack((R, G, B))
         #end
-        return pp.__RGBQuartiles_STORED;
+        return pp.__RGBQuartiles_STORED
     #end
-            
-    def __GetHSVQuartiles(pp) -> list[np.ndarray]:
+
+    def __GetRGBHSV(pp) -> np.ndarray:
+        if pp.__RGBHSV_STORED is None:
+            pp.__RGBHSV_STORED = np.vstack(pp.RGB + pp.HSV)
+        return  pp.__RGBHSV_STORED
+
+    def __GetHSVQuartiles(pp) -> np.ndarray:
         """
         returns quartile 1, 2, 3 for each color channel
 
         Returns
         -------
-        list of quartile arrays (one per HSV channel)
+        2D array
+        H_Q1, H_Q2, H_Q3
+        S_Q1...
 
         """
         if(pp.__HSVQuartiles_STORED is None):
-            output = [[],[],[]];
-            for i in range(3):
-                output[i] = F.StatsGet123_Quartiles(pp.HSV[:,i]);
-            #end
-            pp.__HSVQuartiles_STORED = output;
+            H: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 0])
+            S: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 1])
+            V: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 2])
+            pp.__HSVQuartiles_STORED = np.hstack((H, S, V))
         #end
-        return pp.__HSVQuartiles_STORED;
+        return pp.__HSVQuartiles_STORED
     #end
     
-    def __GetRGBHSVQuartiles(pp) -> list[np.ndarray]:
-        return (pp.RGB + pp.HSV);
+    def __GetRGBHSVQuartiles(pp) -> np.ndarray:
+        """
+        returns Quartiles 1, 2, 3 for every color channel
+        Returns
+        -------
+        2D array
+        R_Q1, R_Q2, R_Q3
+        G_Q1...
+        B_Q1...
+        H_Q1...
+        """
+        return np.hstack((pp.RGB_Quartiles, pp.HSV_Quartiles))
+
     
-    def __GetCoordQuartiles(pp) -> list[np.ndarray]:
+    def __GetCoordQuartiles(pp) -> np.ndarray:
         """
         returns quartile 1, 2, 3 for each XYZ channel in stored coordinate
 
         Returns
         -------
-        list of quartile arrays (one per XYZ channel)
+        2D array
+        X_Q1, X_Q2, X_Q3
+        Y_Q1...
 
         """
-        if(pp.__coordinatesQuartiles_STORED is None):
-            output = [[],[],[]];
-            for i in range(3):
-                output[i] = F.StatsGet123_Quartiles(pp.coordinates[:,i]);
-            #end
-            pp.__coordinatesQuartiles_STORED = output;
-        #end
-        return pp.__coordinatesQuartiles_STORED;
-    #end
+        if pp.__coordinatesQuartiles_STORED is None:
+            X: np.ndarray = F.StatsGet123_Quartiles((pp.coordinates[:, 0]))
+            Y: np.ndarray = F.StatsGet123_Quartiles((pp.coordinates[:, 1]))
+            Z: np.ndarray = F.StatsGet123_Quartiles((pp.coordinates[:, 2]))
+
+            pp.__coordinatesQuartiles_STORED = np.hstack((X, Y, Z))
+        # end
+        return pp.__coordinatesQuartiles_STORED
+    # end
     
     def GetColorChannelByInt(pp, channel: int or str) -> np.ndarray:
         """
@@ -112,16 +133,16 @@ class PickedPointSet:
 
         """
         if(isinstance(channel, str)):
-            channel = F.ColorStringToInt(channel);
+            channel = F.ColorStringToInt(channel)
         #end
         if(not isinstance(channel, int)):
-            raise Exception("Non-valid type for color channel");
+            raise Exception("Non-valid type for color channel")
         #end
         
         if(channel < 3):
-            return pp.RGB[:,channel];
+            return pp.RGB[:, channel]
         else:
-            return pp.HSV[:,channel-3];
+            return pp.HSV[:, channel-3]
         #end
     #end
     
@@ -141,20 +162,21 @@ class PickedPointSet:
 
         """
         if(isinstance(channel, str)):
-            channel = F.ColorStringToInt(channel);
+            channel = F.ColorStringToInt(channel)
         #end
         if(not isinstance(channel, int)):
-            raise Exception("Non-valid type for color channel");
+            raise Exception("Non-valid type for color channel")
         #end
         
         if(channel < 3):
-            return pp.RGB_Quartiles[channel];
+            return pp.RGB_Quartiles[channel]
         else:
-            return pp.HSV_Quartiles[channel - 3];
+            return pp.HSV_Quartiles[channel - 3]
         #end
     #end
     
-    HSV = property(fget = __GetHSV)
+    HSV = property(fget=__GetHSV)
+    RGBHSV = property(fget = __GetRGBHSV)
     coordinate_Quartiles = property(fget = __GetCoordQuartiles)
     RGB_Quartiles = property(fget = __GetRGBQuartiles)
     HSV_Quartiles = property(fget = __GetHSVQuartiles)
