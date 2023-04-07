@@ -59,7 +59,7 @@ class MeshContainer:
         o3d.visualization.draw_geometries(
             [F.GeneratePointCloudFromCoords(coords), mc.mesh])
 
-    def GetPickedPoints(mc, pickedPointSetName: str, numPoints: int, ShouldForceNew: bool = False) -> PickedPointSet:
+    def GetPickedPoints(mc, pickedPointSetName: str, numPoints: int, shouldForceNew: bool = False) -> PickedPointSet:
         """
         Returns a pickedPointSet Object of the name PickedPointSet from the MeshContainer. If one does not exist it will be created with user input
 
@@ -69,7 +69,7 @@ class MeshContainer:
             The name of the PickedPointSet to grab or generate
         numPoints : int
             Number of points to generate if we are generating a PickedPointSet. Defaults to the metamodels "DefaultNumberPointsPerPickedPointsSet"
-        ShouldForceNew: bool, optional (default False)
+        shouldForceNew: bool, optional (default False)
             Should force new creation of named point set despite one of the same name already existing
         Returns
         -------
@@ -77,7 +77,7 @@ class MeshContainer:
             The PickedPointSet, which holds information and methods regarding PickedPoints
 
         """
-        if not ShouldForceNew:
+        if not shouldForceNew:
             if pickedPointSetName in mc.PickedPointsSets.keys():
                 # set already exists
                 return mc.PickedPointsSets[pickedPointSetName]
@@ -488,7 +488,6 @@ class MeshContainer:
             "Process Complete! Printing out the steps into the console. Copy and paste it to get a sequence of commands to reuse.\n\n")
         print(OutputHistory(commandHistory))
         return GetMC(meshContainerHistory, currentStep)
-
 
     def WizardLoad(mc, commands: list) -> 'MeshContainer':
 
@@ -1443,7 +1442,7 @@ class MeshContainer:
             print("Best Channel is" + bestChannelName)
         return bestChannelName
 
-    vertices = property(fget=__GetCoordinates)
+    coordinates = property(fget=__GetCoordinates)
     numVerts = property(fget=__GetNumberVerts)
     RGB = property(fget=__GetRGB)
     HSV = property(fget=__GetHSV)
