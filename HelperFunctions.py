@@ -43,10 +43,24 @@ def IntToColorString(index: int) -> str:
     """
     if index < 0:
         raise Exception("Cannot have a negative index")
-    if index > 0:
+    if index > 5:
         raise Exception("Color index cannot be greater than 5")
     possibleStrings = ['red', 'green', 'blue', 'hue', 'saturation', 'value']
     return possibleStrings[index]
+
+def IntOrStringToColorInt(index) -> int:
+    if isinstance(index, str):
+        index = ColorStringToInt(index)
+    if index > 5:
+        raise Exception("Color index cannot be greater than 5")
+    return index
+
+def IntOrStringToColorString(index) -> int:
+    if isinstance(index, int):
+        index = IntToColorString(index)
+    if index not in ['red', 'green', 'blue', 'hue', 'saturation', 'value']:
+        raise Exception(f"input string {index} is not an accepted color")
+    return index
 
 
 def StatsGet123_Quartiles(arrayIn: np.ndarray) -> np.ndarray:

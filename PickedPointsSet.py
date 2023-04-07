@@ -111,33 +111,27 @@ class PickedPointSet:
 
             pp.__coordinatesQuartiles_STORED = np.hstack((X, Y, Z))
         return pp.__coordinatesQuartiles_STORED
-    
-    def GetColorChannelByInt(pp, channel: int or str) -> np.ndarray:
+
+    def GetSpecificChannel(pp, channel: int or str) -> np.ndarray:
         """
-        Returns a specific color channel by int index
+        Returns a specific color channel
 
         Parameters
         ----------
         channel : int or str
-            0-2 for RGB, 3-5 for HSV. Channel string name can be used instead as well
+        The channel you want to retrieve
 
         Returns
         -------
-        Color Channel: np.ndarray
-            1D color channel.
+        np.ndarrray
+        1D array of color channel data
 
         """
-        if isinstance(channel, str):
-            channel = F.ColorStringToInt(channel)
-        if not isinstance(channel, int):
-            raise Exception("Non-valid type for color channel")
-        
-        if channel < 3:
-            return pp.RGB[:, channel]
-        else:
-            return pp.HSV[:, channel-3]
-    
-    def GetColorStatsByInt(pp, channel: int or str) -> np.ndarray:
+
+        intIndex: int = F.IntOrStringToColorInt(channel)
+        return pp.RGBHSV[intIndex, :]
+
+    def GetSpecificChannelStats(pp, channel: int or str) -> np.ndarray:
         """
         Returns a specific color statistics np.ndarray by int index
 
@@ -152,15 +146,10 @@ class PickedPointSet:
             Q1 Q2 Q3 stats for a channel.
 
         """
-        if isinstance(channel, str):
-            channel = F.ColorStringToInt(channel)
-        if not isinstance(channel, int):
-            raise Exception("Non-valid type for color channel")
-        
-        if channel < 3:
-            return pp.RGB_Quartiles[channel]
-        else:
-            return pp.HSV_Quartiles[channel - 3]
+
+        intIndex: int = F.IntOrStringToColorInt(channel)
+        return pp.RGBHSV_Quartiles[intIndex, :]
+
     
     HSV = property(fget=__GetHSV)
     RGBHSV = property(fget=__GetRGBHSV)
