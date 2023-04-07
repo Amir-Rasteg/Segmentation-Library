@@ -36,7 +36,7 @@ class PickedPointSet:
 
         """
         if pp.__HSV_STORED is None:
-            pp.__HSV_STORED = np.asarray(rgb2hsv(pp.RGB))
+            pp.__HSV_STORED = (rgb2hsv(pp.RGB))
         return pp.__HSV_STORED
     
     def __GetRGBQuartiles(pp) -> np.ndarray:
@@ -54,12 +54,21 @@ class PickedPointSet:
             R: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 0])
             G: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 1])
             B: np.ndarray = F.StatsGet123_Quartiles(pp.RGB[:, 2])
-            pp.__RGBQuartiles_STORED = np.hstack((R, G, B))
+            pp.__RGBQuartiles_STORED = np.vstack((R, G, B))
         return pp.__RGBQuartiles_STORED
 
     def __GetRGBHSV(pp) -> np.ndarray:
+        """
+        Returns 6 x N array of R, G, B, H, S, V channel data
+
+        Returns
+        -------
+        2D array
+        R G B H S V
+        ... number of vertices down ...
+        """
         if pp.__RGBHSV_STORED is None:
-            pp.__RGBHSV_STORED = np.vstack(pp.RGB + pp.HSV)
+            pp.__RGBHSV_STORED = np.hstack([pp.RGB, pp.HSV])
         return pp.__RGBHSV_STORED
 
     def __GetHSVQuartiles(pp) -> np.ndarray:
@@ -77,7 +86,7 @@ class PickedPointSet:
             H: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 0])
             S: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 1])
             V: np.ndarray = F.StatsGet123_Quartiles(pp.HSV[:, 2])
-            pp.__HSVQuartiles_STORED = np.hstack((H, S, V))
+            pp.__HSVQuartiles_STORED = np.vstack((H, S, V))
         return pp.__HSVQuartiles_STORED
     
     def __GetRGBHSVQuartiles(pp) -> np.ndarray:
@@ -91,7 +100,7 @@ class PickedPointSet:
         B_Q1...
         H_Q1...
         """
-        return np.hstack((pp.RGB_Quartiles, pp.HSV_Quartiles))  # since inputs are always small, no need to cache
+        return np.vstack([pp.RGB_Quartiles, pp.HSV_Quartiles])  # since inputs are always small, no need to cache
 
     def __GetCoordQuartiles(pp) -> np.ndarray:
         """
@@ -109,7 +118,7 @@ class PickedPointSet:
             Y: np.ndarray = F.StatsGet123_Quartiles((pp.coordinates[:, 1]))
             Z: np.ndarray = F.StatsGet123_Quartiles((pp.coordinates[:, 2]))
 
-            pp.__coordinatesQuartiles_STORED = np.hstack((X, Y, Z))
+            pp.__coordinatesQuartiles_STORED = np.vstack((X, Y, Z))
         return pp.__coordinatesQuartiles_STORED
 
     def GetSpecificChannel(pp, channel: int or str) -> np.ndarray:
@@ -129,9 +138,9 @@ class PickedPointSet:
         """
 
         intIndex: int = F.IntOrStringToColorInt(channel)
-        return pp.RGBHSV[intIndex, :]
+        return pp.RGBHSV[:, intIndex]
 
-    def GetSpecificChannelStats(pp, channel: int or str) -> np.ndarray:
+    def GetSpecificChannelQuartiles(pp, channel: int or str) -> np.ndarray:
         """
         Returns a specific color statistics np.ndarray by int index
 
