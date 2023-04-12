@@ -253,6 +253,22 @@ class MeshContainer:
 
         o3d.visualization.draw_geometries(modelsToShow)
 
+    def GenerateNewMeshWithColorRatio(mc, topColor: str or int, bottomColor: str or int, replaceNaNWith: float = 1.0) -> 'MeshContainer':
+
+        colorsTop: np.ndarray = copy.copy(mc.GetSpecificChannel(topColor))
+        colorsBottom: np.ndarray = copy.copy(mc.GetSpecificChannel(bottomColor))
+        ratio = np.divide(colorsTop, colorsBottom)
+
+        # fix NaN which occurs when we divide by 0
+        print("Overwriting NaN values...")
+        ratio = np.nan_to_num(ratio, nan=replaceNaNWith)
+
+        newMesh: o3d.geometry.TriangleMesh = copy.copy(mc.mesh)
+        newMesh.vertex_colors = o3d.utility.Vector3dVector(np.transpose(np.vstack([ratio, ratio, ratio])))
+
+        return mc.__ContainerFromMesh(newMesh)
+
+
     def Wizard(mc) -> 'MeshContainer':
         '''Easy to Use Menu for running commands and generating automations'''
 
@@ -1112,9 +1128,9 @@ class MeshContainer:
         # if no PPS is given, just force create new ones from user
         shouldForceNew = (PPSInsideName == "_InsidePoints")
         pickedPointsDesired = mc.GetPickedPoints(
-            PPSInsideName, numNewPoints, ShouldForceNew=shouldForceNew)
+            PPSInsideName, numNewPoints, shouldForceNew=shouldForceNew)
         pickedPointsUndesired = mc.GetPickedPoints(
-            PPSOutsideName, numNewPoints, ShouldForceNew=shouldForceNew)
+            PPSOutsideName, numNewPoints, shouldForceNew=shouldForceNew)
 
         if (numberAdjacentSearches > 0):
             pickedPointsDesired = mc.SetPickedPoints(PPSInsideName + "_Adj",
@@ -1222,7 +1238,7 @@ class MeshContainer:
         mu = np.sum(centers * counts) / n
         return np.sum(counts * ((centers - mu) ** 2))
 
-    def __OtsuThreshold(mc, singleChannleArr: np.ndarray) -> float:
+    def __OtsuThreshold(mc, singleChannelArr: np.ndarray) -> float:
         """
         Given a single channel of data, finds the otsu threshold to divide it evenly
 
@@ -1239,7 +1255,7 @@ class MeshContainer:
         """
         # credit: https://bic-berkeley.github.io/psych-214-fall-2016/otsu_threshold.html
         numBins = 256  # this number possible values per single channel pixel
-        counts, edges = np.histogram(singleChannleArr[:], bins=numBins)
+        counts, edges = np.histogram(singleChannelArr[:], bins=numBins)
         bin_centers = edges[:-1] + np.diff(edges) / 2
         total_ssds = []
         for bin_no in range(1, numBins):
