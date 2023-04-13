@@ -1022,7 +1022,7 @@ class MeshContainer:
             boundingBoxInitialPPSName = "Points To Crop"
             forceNew = True
 
-        pointsToCropFrom = mc.GetPickedPoints(boundingBoxInitialPPSName, numPoints=4, ShouldForceNew=forceNew)
+        pointsToCropFrom = mc.GetPickedPoints(boundingBoxInitialPPSName, numPoints=4, shouldForceNew=forceNew)
         coordsToCropFrom = pointsToCropFrom.coordinates
         BoundingBox, CubePoints = FindBoundingBoxFrom4Points(coordsToCropFrom, cubeHalfOffsetHeight)
         newMesh = mc.mesh.crop(BoundingBox)
