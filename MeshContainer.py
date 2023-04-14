@@ -320,9 +320,12 @@ class MeshContainer:
                 print(
                     "DivideByOtsuColorSinglePickedPoint : Pick color channel to Otsu's segment with, then pick a side.")
                 print("DivideGiven2PPS : Pick an inside and outside region and the system will attempt to segment it.")
+                print("RemoveIslands : Remove tiny regions that are of little use.")
+                print("GenerateNewMeshWithColorRatio : Create a grayscale mesh from the ratio of a top color over a bottom color from this one.")
                 print("Previous : What was the last command you ran?")
                 print("Undo : Undos your previous command")
-                print("Stop : stops the wizard, outputs the current mesh and steps taken to get there.\n")
+                print("Stop : stops the wizard, outputs the current mesh and steps taken to get there.")
+                print("StopAndSave : same as above, but first asks you where to save the resultant mesh to.\n")
 
             def VM(currentStep: int, meshContainerHistory: list):
                 hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
@@ -416,6 +419,60 @@ class MeshContainer:
 
                 return [dOut, newMC]
 
+            def RI(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                newMC: MeshContainer
+                newMC, _ = hmc.RemoveIslands()
+
+                dOut: dict = {
+                    "Command": "RemoveIslands"
+                }
+
+                return [dOut, newMC]
+
+            def GNMWCR(currentStep: int, meshContainerHistory: list) -> list[dict, MeshContainer]:
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                ansTop: str
+                possible: list = ["red", "green", "blue", "hue", "saturation", "value"]
+                while True:
+                    print("Pick a TOP color channel, with options: red, green, blue, hue, saturation, value\n")
+                    ansTop = input()
+                    if ansTop in possible:
+                        break
+                    print("Invalid Option")
+
+                ansBottom: str
+                while True:
+                    print("Pick a BOTTOM color channel, with options: red, green, blue, hue, saturation, value\n")
+                    ansBottom = input()
+                    if ansBottom in possible:
+                        break
+                    print("Invalid Option")
+
+                newMC: MeshContainer
+                newMC, _ = hmc.GenerateNewMeshWithColorRatio(ansTop,ansBottom)
+
+                dOut: dict = {
+                    "Command": "GenerateNewMeshWithColorRatio",
+                    "topColor": (ansTop),
+                    "bottomColor": (ansBottom)
+                }
+
+                return [dOut, newMC]
+
+            def SAS(currentStep: int, meshContainerHistory: list):
+                hmc: MeshContainer = GetMC(meshContainerHistory, currentStep)
+
+                print("Type in the path to save the file at. Use Forward Slashes\n")
+                topPath: str = input()
+
+                print("Type in the mesh name. Do not include File Extension\n")
+                fileName: str = input()
+
+                hmc.Save(topPath, fileName)
+
             # This mess is why C# is better
             if choice == "Help":
                 PrintHelp()
@@ -433,7 +490,12 @@ class MeshContainer:
                 currentStep, commandHistory, meshContainerHistory = UndoPrevStep(currentStep, commandHistory,
                                                                                  meshContainerHistory)
                 return [False, currentStep, meshContainerHistory, commandHistory]
+
             if choice == "Stop":
+                return [True, currentStep, meshContainerHistory, commandHistory]
+
+            if choice == "StopAndSave":
+                SAS(currentStep, meshContainerHistory)
                 return [True, currentStep, meshContainerHistory, commandHistory]
 
             # Mesh Modifiers
@@ -460,6 +522,12 @@ class MeshContainer:
                 unknown = False
             if choice == "DivideGiven2PPS":
                 dOut, newMesh = DG2PPS(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "RemoveIslands":
+                dOut, newMesh = RI(currentStep, meshContainerHistory)
+                unknown = False
+            if choice == "GenerateNewMeshWithColorRatio":
+                dOut, newMesh = GNMWCR(currentStep, meshContainerHistory)
                 unknown = False
 
             if unknown:
@@ -899,6 +967,8 @@ class MeshContainer:
 
     def Save(mc, folderPath: str, fileName: str):
         """allows for saving of meshContainers as ply files"""
+        if folderPath[-1] != "/":
+            folderPath = folderPath + "/"
         o3d.io.write_triangle_mesh((folderPath + fileName + ".ply"), mc.mesh)
 
     @property
