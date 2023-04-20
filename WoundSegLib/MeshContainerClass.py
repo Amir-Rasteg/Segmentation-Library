@@ -1,12 +1,14 @@
-import open3d as o3d
-import numpy as np
-from PickedPointsSet import PickedPointSet
-from skimage.color import rgb2hsv
-import HelperFunctions as F
+import copy
 import math
 import random
-import copy
 from typing import Tuple
+
+import numpy as np
+import open3d as o3d
+from skimage.color import rgb2hsv
+
+import WoundSegLib.HelperFunctions as F
+from WoundSegLib.PickedPointsSet import PickedPointSet
 
 
 class MeshContainer:
