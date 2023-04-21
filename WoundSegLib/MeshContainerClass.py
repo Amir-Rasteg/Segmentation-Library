@@ -488,7 +488,7 @@ class MeshContainer:
             if choice == "Undo":
                 if (currentStep == 0):
                     print("There are no previous steps to undo!")
-                    return [False, currentStep, commandHistory, meshContainerHistory]
+                    return [False, currentStep, meshContainerHistory, commandHistory]
                 currentStep, commandHistory, meshContainerHistory = UndoPrevStep(currentStep, commandHistory,
                                                                                  meshContainerHistory)
                 return [False, currentStep, meshContainerHistory, commandHistory]
@@ -547,7 +547,7 @@ class MeshContainer:
             if len(commandHistory) == 0:
                 return "No Steps taken"
 
-            output: str = "dictionary: dict = ["
+            output: str = "dictionary: list = ["
             for dictCommand in commandHistory:
                 output = output + F.dict2String(dictCommand) + ","
             output = output[:-1] + "]"
