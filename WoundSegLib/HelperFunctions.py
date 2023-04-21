@@ -167,5 +167,5 @@ def dict2String(dictionary: dict) -> str:
 
         string = string + substring + ","
 
-    string = string[:-1] + "}"
+    string = string[:-3] + "}"
     return string
